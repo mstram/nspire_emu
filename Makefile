@@ -1,31 +1,34 @@
 OBJ = armloader.o asmcode.o casplus.o cpu.o des.o debug.o emu.o flash.o gdbstub.o gui.o interrupt.o keypad.o lcd.o link.o memory.o misc.o mmu.o os-win32.o resource.o schedule.o serial.o sha256.o snippets.o translate.o usb.o usblink.o
 
-FLAGS = -W -Wall
-
-CC ?= gcc
-LD ?= ld
-WINDRES ?= windres
-OBJCOPY ?= objcopy
+FLAGS = -W -Wall -m32
+DISTDIR := .\bin
+ifneq ($(OS),Windows_NT)
+PREFIX=i686-w64-mingw32-
+DISTDIR := ./bin
+endif
+CC = $(PREFIX)gcc
+LD = $(PREFIX)ld
+WINDRES = $(PREFIX)windres
+OBJCOPY = $(PREFIX)objcopy
+vpath %.exe $(DISTDIR)
 
 all : nspire_emu.exe
 
-emu.exe : $(OBJ)
-	$(CC) $(FLAGS) $(OBJ) -o $@ -lgdi32 -lcomdlg32 -lwinmm -lws2_32
-
 nspire_emu.exe : $(OBJ)
-	$(CC) $(FLAGS) $(OBJ) -o $@ -lgdi32 -lcomdlg32 -lwinmm -lws2_32 -s -Wl,--nxcompat
+	mkdir -p $(DISTDIR)
+	$(CC) $(FLAGS) $(OBJ) -o  $(DISTDIR)/$@ -lgdi32 -lcomdlg32 -lwinmm -lws2_32 -s -Wl,--nxcompat
 
 cpu.o : cpu.c
 	$(CC) $(FLAGS) -O3 -c $< -o $@
 
 resource.o : resource.rc id.h
-	$(WINDRES) $< -o $@
+	$(WINDRES) -Fpe-i386 $< -o $@
 
 sha256.o : sha256.c
 	$(CC) $(FLAGS) -O3 -c $< -o $@
 
 asmcode.o : asmcode.S
-	$(CC) -c $< -o $@
+	$(CC) $(FLAGS) -c $< -o $@
 
 armsnippets.o: armsnippets.S
 	arm-none-eabi-gcc -c -mcpu=arm7tdmi $< -o $@
@@ -34,10 +37,11 @@ snippets.o: armsnippets.o
 	arm-none-eabi-objcopy -O binary $< snippets.bin
 	$(LD) -r -b binary -o snippets.o snippets.bin
 	rm snippets.bin
-	$(OBJCOPY) --rename-section .data=.rodata,alloc,load,readonly,data,contents snippets.o snippets.o
+	$(OBJCOPY) -Fpe-i386 --rename-section .data=.rodata,alloc,load,readonly,data,contents snippets.o snippets.o
 
 %.o : %.c
 	$(CC) $(FLAGS) -Os -c $< -o $@
 
 clean : 
-	rm -f *.o nspire_emu.exe emu.exe
+	rm -rf *.o $(DISTDIR)/nspire_emu.exe
+

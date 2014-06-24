@@ -113,7 +113,7 @@ static void set_nonblocking(int socket, bool nonblocking) {
 	u_long mode = nonblocking;
 	ioctlsocket(socket, FIONBIO, &mode);
 #else
-	ret = fcntl(socket, F_GETFL, 0);
+	int ret = fcntl(socket, F_GETFL, 0);
 	fcntl(socket, F_SETFL, nonblocking ? ret | O_NONBLOCK : ret & ~O_NONBLOCK);
 #endif
 }
@@ -579,7 +579,7 @@ void gdbstub_reset(void) {
 }
 
 static void gdbstub_disconnect(void) {
-	puts("GDB disconnected.");
+	emuprintf("GDB disconnected.\n");
 	closesocket(socket_fd);
 	socket_fd = 0;
 	gdb_connected = false;
@@ -609,8 +609,11 @@ void gdbstub_recv(void) {
 		/* Interface with Ndless */
 		if (ndls_is_installed())
 			armloader_load_snippet(SNIPPET_ndls_debug_alloc, NULL, 0, gdb_connect_ndls_cb);
+		else
+			emuprintf("Ndless not detected or too old. Debugging of applications not available!\n");
+
 		gdb_connected = true;
-		puts("GDB connected.");
+		emuprintf("GDB connected.\n");
 		return;
 	}
 	fd_set rfds;
