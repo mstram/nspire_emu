@@ -126,7 +126,7 @@ LRESULT CALLBACK gfx_wnd_proc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		PAINTSTRUCT ps;
 		HDC hdc = BeginPaint(hWnd, &ps);
 		if (emulate_cx)
-			lcd_cx_draw_frame(framebuffer, (u32 *)bmi.bmiColors);
+			lcd_cx_draw_frame(framebuffer, (uint32_t *)bmi.bmiColors);
 		else if (emulate_casplus)
 			casplus_lcd_draw_frame((BYTE (*)[160])framebuffer);
 		else
@@ -440,11 +440,11 @@ LRESULT CALLBACK emu_wnd_proc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 					BYTE *p = GlobalLock(hglb);
 					memcpy(p, &bmi, headersize);
 					if (emulate_cx)
-						lcd_cx_draw_frame((u16 (*)[320])(p + headersize), (u32 *)(p + sizeof(BITMAPINFOHEADER)));
+						lcd_cx_draw_frame((uint16_t (*)[320])(p + headersize), (uint32_t *)(p + sizeof(BITMAPINFOHEADER)));
 					else if (emulate_casplus)
-						casplus_lcd_draw_frame((u8 (*)[160])(p + headersize));
+						casplus_lcd_draw_frame((uint8_t (*)[160])(p + headersize));
 					else
-						lcd_draw_frame((u8 (*)[160])(p + headersize));
+						lcd_draw_frame((uint8_t (*)[160])(p + headersize));
 					GlobalUnlock(hglb);
 					SetClipboardData(CF_DIB, hglb);
 				}
